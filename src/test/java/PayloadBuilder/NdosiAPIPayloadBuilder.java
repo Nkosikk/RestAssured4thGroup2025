@@ -11,14 +11,13 @@ import java.time.format.DateTimeFormatter;
 public class NdosiAPIPayloadBuilder {
 
     public static JSONObject registerPayload(String firstName, String lastName, String email, String password, String confirmPassword) {
-        JSONObject dataObject = new JSONObject();
         JSONObject jsonObject = new JSONObject();
+        JSONObject dataObject = new JSONObject();
 
         jsonObject.put("success", true);
         jsonObject.put("message", "User registered successfully");
         jsonObject.put("data", dataObject);
 
-        dataObject.put("id", "6eee2902-33b9-4fc4-927f-f83cc81d7189");
         dataObject.put("firstName", firstName);
         dataObject.put("lastName", lastName);
         dataObject.put("email", email);
