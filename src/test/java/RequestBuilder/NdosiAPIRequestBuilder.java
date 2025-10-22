@@ -8,12 +8,12 @@ import static io.restassured.RestAssured.*;
 
 public class NdosiAPIRequestBuilder {
 
-    public static Response loginResponse() {
+    public static Response loginResponse(String email,String password) {
         return given().
                 baseUri(NdosiBaseUrl).
                 basePath("/login").
                 contentType("application/json").
-                body(loginPayload()).
+                body(loginPayload(email,password)).
                 log().all().
                 post().
                 then().

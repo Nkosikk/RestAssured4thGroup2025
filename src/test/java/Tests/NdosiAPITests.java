@@ -15,7 +15,7 @@ public class NdosiAPITests {
 
     @Description("As a user i want to be able to login to Ndosi API")
     public void loginTests() {
-        loginResponse().
+        loginResponse("nkosi@gmail.com","12345678").
                 then().
                 log().all().
                 assertThat().

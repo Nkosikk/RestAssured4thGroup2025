@@ -8,10 +8,10 @@ import java.sql.PreparedStatement;
 
 public class NdosiAPIPayloadBuilder {
 
-    public static JSONObject loginPayload() {
+    public static JSONObject loginPayload(String email,String password) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("email", "nkosi@gmail.com");
-        jsonObject.put("password", "12345678");
+        jsonObject.put("email", email);
+        jsonObject.put("password", password);
 
         return jsonObject;
     }
