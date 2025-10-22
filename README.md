@@ -31,7 +31,7 @@ RestAssured4thGroup2025/
     │   └── resources/
     └── test/
         ├── java/
-        │   └── LoginTest.java
+        │   └── Basics.LoginTest.java
         └── resources/
             └── testng.xml
 ```
@@ -64,7 +64,7 @@ RestAssured4thGroup2025/
 
 ## 🧪 Test Cases
 
-### LoginTest.java
+### Basics.LoginTest.java
 
 The main test class contains three comprehensive test methods:
 
@@ -101,12 +101,12 @@ mvn test
 
 ### Run Specific Test Class
 ```bash
-mvn test -Dtest=LoginTest
+mvn test -Dtest=Basics.LoginTest
 ```
 
 ### Run Specific Test Method
 ```bash
-mvn test -Dtest=LoginTest#testLoginWithValidCredentials
+mvn test -Dtest=Basics.LoginTest#testLoginWithValidCredentials
 ```
 
 ### Run with TestNG XML Configuration
@@ -155,7 +155,7 @@ mvn test -DsuiteXmlFile=src/test/resources/testng.xml
 <suite name="LoginTestSuite">
     <test name="LoginTests">
         <classes>
-            <class name="LoginTest"/>
+            <class name="Basics.LoginTest"/>
         </classes>
     </test>
 </suite>
