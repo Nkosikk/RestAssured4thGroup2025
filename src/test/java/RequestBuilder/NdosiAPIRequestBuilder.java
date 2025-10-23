@@ -11,11 +11,11 @@ public class NdosiAPIRequestBuilder {
     public static Response registerResponse(String firstName, String lastName, String email, String password, String confirmPassword) {
         return given().
                 baseUri(NdosiBaseUrl).
-                basePath("/register").
+//                basePath("/register").
                 contentType("application/json").
                 body(registerPayload(firstName,lastName,email,password,confirmPassword)).
                 log().all().
-                post().
+                post("/register").
                 then().
                 log().all().
                 extract().response();
