@@ -22,5 +22,14 @@ public class NdosiAPITests {
                 statusCode(success_status_code);
     }
 
+    @Description("As a user i want to be able to login to Ndosi API")
+    public void loginTestsTest() {
+        loginResponse("nkosi@gmail.com","12345678").
+                then().
+                log().all().
+                assertThat().
+                statusCode(success_status_code);
+    }
+
 
 }
