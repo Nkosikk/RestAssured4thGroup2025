@@ -32,7 +32,12 @@ public class NdosiAPITests {
                 statusCode(create_success_status_code).
                 body(containsString("data")).
                 body("success",equalTo(true)).
-                body("message",equalTo("User registered successfully"));
+                body("message",equalTo("User registered successfully")).
+                body("data.email",equalTo(email)).
+                body("data.firstName",equalTo(firstName)).
+                body("data.lastName",equalTo(lastName)).
+                body("data.id",notNullValue()).
+                body("data.createdAt",notNullValue());
     }
 
     //Login Test
