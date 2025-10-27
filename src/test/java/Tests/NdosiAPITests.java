@@ -9,32 +9,37 @@ import java.util.UUID;
 
 import static Common.commonTestData.*;
 import static RequestBuilder.NdosiAPIRequestBuilder.*;
-import io.restassured.response.Response;
-import org.testng.Assert;
+import static Utils.generateTestData.*;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+
 
 @Test
 @Feature("Ndosi API")
 @Story("Login")
 public class NdosiAPITests {
-    public String email = UUID.randomUUID().toString().substring(0, 8) + "@gmail.com";
+
     private static String token;
 
     //Registration Test
     @Description("As a user i want to be able to register to Ndosi API")
-    @Test(priority = 1)
+
     public void registerTests() {
-        registerResponse("Test","Tiisetso",email,"12345678","12345678").
+        registerResponse(firstName,lastName,email,password,password).
                 then().
                 log().all().
                 assertThat().
-                statusCode(create_success_status_code);
+                statusCode(create_success_status_code).
+                body(containsString("data")).
+                body("success",equalTo(true)).
+                body("message",equalTo("User registered successfully"));
     }
 
     //Login Test
     @Description("As a user i want to be able to login to Ndosi API")
-    @Test(priority = 2)
+    @Test(dependsOnMethods = "registerTests")
     public void loginTests() {
-        loginResponse(email,"12345678").
+        loginResponse(email,password).
                 then().
                 log().all().
                 assertThat().
