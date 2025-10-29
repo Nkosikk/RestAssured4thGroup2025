@@ -10,10 +10,11 @@ import static PayloadBuilder.NdosiAPIPayloadBuilder.*;
 import static io.restassured.RestAssured.*;
 
 public class NdosiAPIRequestBuilder {
+    static String apiToken;
 
     //login API Request
     public static Response loginResponse(String email,String password) {
-        return given().
+        Response response = given().
                 baseUri(NdosiBaseUrl).
                 basePath("/login").
                 contentType("application/json").
@@ -23,6 +24,9 @@ public class NdosiAPIRequestBuilder {
                 then().
                 log().all().
                 extract().response();
+
+        apiToken = response.jsonPath().getString("data.token");
+        return response;
     }
     //register API Request
     public static Response registerResponse(String firstName, String lastName,String email,String password, String confirmPassword) {
@@ -39,6 +43,26 @@ public class NdosiAPIRequestBuilder {
 
         //System.out.println();
     }
+
+    // Update the User profile API Request
+    public static Response updateUserProfileResponse(String fullName, String email) {
+        return given().
+                baseUri(NdosiBaseUrl).
+                basePath("/profile").
+                contentType("application/json").
+                header("Authorization", "Bearer " + apiToken).
+                body(UpdateUserPayload(fullName, email)).
+                log().all().
+                put().
+                then().
+                log().all().
+                extract().response();
+    }
+
+
+
+
+
 
     //Specific user profile API Request by decoding JWT token
     public static Response getProfileResponse(String token) {
