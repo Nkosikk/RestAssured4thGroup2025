@@ -28,5 +28,15 @@ public class NdosiAPIPayloadBuilder {
         return jsonObject;
     }
 
+    //Update User Payload
+    public  static JSONObject UpdateUserPayload(String fullName, String email) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("full_name", fullName);
+        jsonObject.put("email", email);
+
+        return jsonObject;
+    }
+
+
 
 }
