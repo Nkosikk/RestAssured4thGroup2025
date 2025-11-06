@@ -22,7 +22,7 @@ public class NdosiAPITests {
     private static String token;
 
     //Registration Test
-    @Description("As a user i want to be able to register to Ndosi API")
+    @Description("As a user i want to be able to register to Ndosi API Prathamesh edited")
 
     public void registerTests() {
         registerResponse(firstName,lastName,email,password,password).
