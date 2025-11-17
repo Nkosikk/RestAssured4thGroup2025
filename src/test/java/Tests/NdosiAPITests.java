@@ -65,7 +65,7 @@ public class NdosiAPITests {
                 body(containsString("data")).
                 body("success",equalTo(true)).
                 body("message",equalTo("Profile updated successfully")).
-                body("data.FirsName",equalTo(newFirstName)).
+                body("data.FirstName",equalTo(newFirstName)).
                 body("data.LastName",equalTo(newLastName)).
                 body("data.updatedAt",notNullValue());
     }
