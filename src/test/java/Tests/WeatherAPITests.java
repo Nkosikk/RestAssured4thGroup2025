@@ -36,13 +36,13 @@ public class WeatherAPITests {
             String stationId = response.jsonPath().getString("ID");
             System.out.println("Created Station ID: " + stationId);
 
-        } else if (statusCode == 400) {
+        } else if (statusCode == bad_request_status_code) {
             System.out.println("Bad Request: " + response.asPrettyString());
             response.then()
                     .body("message", containsString("Missing"))
                     .body("code", notNullValue());
 
-        } else if (statusCode == 409) {
+        } else if (statusCode == duplicate_external_ID) {
             System.out.println("Duplicate External ID: " + response.asPrettyString());
             response.then()
                     .body("message", containsString("already exists"));
