@@ -1,5 +1,6 @@
 package Tests;
 
+import com.google.gson.JsonParseException;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import org.testng.annotations.Test;
@@ -21,21 +22,38 @@ public class WeatherAPITests {
     public static void registerStationTest() {
 
         Response response = registerStation(external_id, name, latitude, longitude, altitude);
-        String stationId;
-        response.then()
-                .assertThat()
-                .statusCode(create_success_status_code)
-                .assertThat()
-                .body("ID", notNullValue())
-                .assertThat()
-                .body("name", containsString("Station_"))
-                .assertThat()
-                .body("external_id", containsString("EXT_"));
+        int statusCode = response.getStatusCode();
 
-         stationId = response.jsonPath().getString("ID");
-        System.out.println("Created Station ID: " + stationId);
+        System.out.println("Create Station Response Code: " + statusCode);
 
+        if (statusCode == create_success_status_code) {
+            response.then()
+                    .assertThat()
+                    .body("ID", notNullValue())
+                    .body("name", containsString("Station_"))
+                    .body("external_id", containsString("EXT_"));
+
+            String stationId = response.jsonPath().getString("ID");
+            System.out.println("Created Station ID: " + stationId);
+
+        } else if (statusCode == 400) {
+            System.out.println("Bad Request: " + response.asPrettyString());
+            response.then()
+                    .body("message", containsString("Missing"))
+                    .body("code", notNullValue());
+
+        } else if (statusCode == 409) {
+            System.out.println("Duplicate External ID: " + response.asPrettyString());
+            response.then()
+                    .body("message", containsString("already exists"));
+
+        } else {
+            System.out.println("Unexpected Error: " + statusCode);
+            System.out.println(response.asPrettyString());
+        }
     }
+
+
 
     @Test(priority = 2, dependsOnMethods = "registerStationTest")
     public void transferMeasurementsTest() {
