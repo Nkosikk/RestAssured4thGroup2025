@@ -1,17 +1,18 @@
 package Tests;
 
-import com.google.gson.JsonParseException;
+import Common.commonTestData;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
-import org.testng.annotations.Test;
 import io.restassured.response.Response;
-
+import org.testng.annotations.Test;
+import static Common.BasePaths.*;
+import static Common.BasePaths.API_KEY;
+import static Common.BasePaths.*;
 import static Common.commonTestData.*;
 import static RequestBuilder.WeatherAPIRequestBuilder.*;
-import static RequestBuilder.WeatherAPIRequestBuilder.registerStation;
-import static RequestBuilder.WeatherAPIRequestBuilder.*;
-import static Utils.generateTestData.*;
 import static Utils.generateTestData.stationName;
+import static Utils.generateTestData.*;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 @Feature("Ndosi API")
@@ -25,18 +26,16 @@ public class WeatherAPITests {
         int statusCode = response.getStatusCode();
 
         System.out.println("Create Station Response Code: " + statusCode);
+        response.then()
+                .log().all()
+                .assertThat()
+                .statusCode(create_success_status_code)
+                .body("ID", notNullValue())
+                .body("name", containsString("Station_"))
+                .body("external_id", containsString("EXT_"))
+                .body("created_at", notNullValue());
 
-        if (statusCode == create_success_status_code) {
-            response.then()
-                    .assertThat()
-                    .body("ID", notNullValue())
-                    .body("name", containsString("Station_"))
-                    .body("external_id", containsString("EXT_"));
-
-            String stationId = response.jsonPath().getString("ID");
-            System.out.println("Created Station ID: " + stationId);
-
-        } else if (statusCode == bad_request_status_code) {
+        if (statusCode == bad_request_status_code) {
             System.out.println("Bad Request: " + response.asPrettyString());
             response.then()
                     .body("message", containsString("Missing"))
@@ -57,63 +56,194 @@ public class WeatherAPITests {
 
     @Test(priority = 2, dependsOnMethods = "registerStationTest")
     public void transferMeasurementsTest() {
-        System.out.printf("Transfering measurements to station:"+station_id);
+
+        System.out.printf("Transferring measurements to station: " + station_id);
         Response response = getNewlyRegisteredStation(station_id);
+
         response.then()
                 .log().all()
                 .assertThat()
                 .statusCode(success_status_code)
-                .assertThat()
                 .body("id", equalTo(station_id))
-                .assertThat()
                 .body("name", containsString("Station_"))
-                .assertThat()
                 .body("external_id", containsString("EXT_"))
-                .assertThat()
                 .body("created_at", notNullValue());
 
+        //negative test
+        String invalidId = commonTestData.invalidId;
+        Response invalidIdResponse = getNewlyRegisteredStation(invalidId);
+
+        if (invalidIdResponse.statusCode() != bad_request_status_code) {
+            throw new AssertionError("Expected 400 for invalid station ID, but got: "
+                    + invalidIdResponse.statusCode());
+        }
+
+        Response missingIdResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH+"/")
+                .queryParam("appid", API_KEY)
+                .get();
+
+        if (missingIdResponse.statusCode() != not_found_status_code) {
+            throw new AssertionError("Expected 404 for missing station ID, but got: "
+                    + missingIdResponse.statusCode());
+        }
+
+        Response invalidKeyResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/" + station_id)
+                .queryParam("appid", "INVALID_KEY")
+                .get();
+
+        if (invalidKeyResponse.statusCode() != invalid_api_status_code) {
+            throw new AssertionError("Expected 401 for invalid API key, but got: "
+                    + invalidKeyResponse.statusCode());
+        }
+
+        Response noKeyResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/" + station_id)
+                .get();
+
+        if (noKeyResponse.statusCode() != invalid_api_status_code) {
+            throw new AssertionError("Expected 401 for missing API key, but got: "
+                    + noKeyResponse.statusCode());
+        }
+
     }
+
+
     @Test(priority = 3, dependsOnMethods = "transferMeasurementsTest")
     public void updateStationNameTest() {
+
         System.out.printf("Updating station name to: " + station_id);
-        Response response = updateStationNameRequestBuilder(external_id, station_id,stationName,latitude, longitude, altitude);
+        Response response = updateStationNameRequestBuilder(external_id, station_id, stationName, latitude, longitude, altitude);
         response.then()
                 .log().all()
                 .assertThat()
                 .statusCode(success_status_code)
-                .assertThat()
                 .body("id", equalTo(station_id))
-                .assertThat()
                 .body("name", containsString(stationName))
-                .assertThat()
                 .body("external_id", containsString("EXT_"))
-                .assertThat()
                 .body("created_at", notNullValue());
+
+        //negative
+        String invalidStationId = "0000000";
+
+        Response invalidIdResponse = updateStationNameRequestBuilder(external_id, invalidStationId, stationName, latitude, longitude, altitude
+        );
+
+        if (invalidIdResponse.statusCode() != bad_request_status_code) {
+            throw new AssertionError("Expected 400 for invalid station ID but got: " + invalidIdResponse.statusCode()
+            );
+        }
+
+        Response missingIdResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/")  // No ID included
+                .queryParam("appid", API_KEY)
+                .contentType("application/json")
+                .body("{}")
+                .put();
+
+        if (missingIdResponse.statusCode() != duplicate_external_ID) {
+            throw new AssertionError(
+                    "Expected 404 for missing station ID but got: " + missingIdResponse.statusCode());
+        }
+
+        Response invalidKeyResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/" + station_id)
+                .queryParam("appid", "WRONG_KEY")
+                .contentType("application/json")
+                .body("{}")
+                .put();
+
+        if (invalidKeyResponse.statusCode() != invalid_api_status_code) {
+            throw new AssertionError(
+                    "Expected 401 for invalid API key but got: " + invalidKeyResponse.statusCode()
+            );
+        }
+
+        Response noKeyResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/" + station_id)
+                .contentType("application/json")
+                .body("{}")
+                .put();
+
+        if (noKeyResponse.statusCode() != invalid_api_status_code) {
+            throw new AssertionError(
+                    "Expected 401 for missing API key but got: " + noKeyResponse.statusCode()
+            );
+        }
     }
+
     @Test(priority = 4)
     public void deleteStationTest() {
 
+        System.out.printf("Deleting station: " + station_id);
         Response response = deleteNewlyRegisteredStation(station_id);
 
-        int statusCode = response.getStatusCode();
-        System.out.println("Response Status Code: " + statusCode);
+        response.then()
+                .log().all()
+                .assertThat()
+                .statusCode(delete_success_status_code);
+
+        Response deleteAgainResponse = deleteNewlyRegisteredStation(station_id);
+
+        if (deleteAgainResponse.getStatusCode() != not_found_status_code) {
+            throw new AssertionError(
+                    "Expected 404 when deleting station again but got: " + deleteAgainResponse.getStatusCode());
+        }
 
 
-        if (statusCode == 204) {
-            System.out.println("Station deleted successfully: " + station_id);
+        // negative test
 
-        } else if (statusCode == 400 || statusCode == 404 || statusCode == 500) {
-            response.then()
-                    .assertThat()
-                    .body("code", notNullValue())
-                    .body("message", notNullValue());
-            System.out.println("Error deleting station: " + response.asPrettyString());
+        String invalidStationId = commonTestData.invalidStationId;
+        Response invalidIdResponse = deleteNewlyRegisteredStation(invalidStationId);
 
-        } else {
-            System.out.println("Unexpected status code: " + statusCode);
-            System.out.println(response.asPrettyString());
+        if (invalidIdResponse.getStatusCode() != bad_request_status_code) {
+            throw new AssertionError(
+                    "Expected 400 for invalid station ID but got: " + invalidIdResponse.getStatusCode());
+        }
+
+
+
+        Response missingIdResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/") // No ID
+                .queryParam("appid", API_KEY)
+                .delete();
+
+        if (missingIdResponse.getStatusCode() != duplicate_external_ID) {
+            throw new AssertionError(
+                    "Expected 404 for missing station ID but got: "
+                            + missingIdResponse.getStatusCode()
+            );
+        }
+
+
+        Response invalidKeyResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/" + station_id)
+                .queryParam("appid", "INVALID_KEY")
+                .delete();
+
+        if (invalidKeyResponse.getStatusCode() != invalid_api_status_code) {
+            throw new AssertionError("Expected 401 for invalid API key but got: " + invalidKeyResponse.getStatusCode());
+        }
+
+        Response noKeyResponse = given()
+                .baseUri(BASE_URI)
+                .basePath(BASE_PATH + "/" + station_id)
+                .delete();
+
+        if (noKeyResponse.getStatusCode() != invalid_api_status_code) {
+            throw new AssertionError("Expected 400 for missing API key but got: " + noKeyResponse.getStatusCode());
         }
     }
+
 
 }
 
